@@ -24,6 +24,7 @@ public class Result {
                 "status='" + status + '\'' +
                 ", message='" + message + '\'' +
                 ", sessionId=" + sessionId +
+                ", data=" + data +
                 '}';
     }
 }

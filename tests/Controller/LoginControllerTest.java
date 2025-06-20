@@ -9,7 +9,7 @@ class LoginControllerTest {
     @Test
     void login() {
         LoginController loginController = new LoginController();
-        Result result = loginController.login("testUser", "testPass");
+        Result result = loginController.login("testUser2", "testPass2");
         System.out.println(result);
         assertEquals("success", result.status);
         assertNotEquals(-1, result.sessionId);
@@ -27,7 +27,7 @@ class LoginControllerTest {
     @Test
     void createAcount() {
         LoginController loginController = new LoginController();
-        Result result = loginController.createAcount("testUser", "testPass", 1);
+        Result result = loginController.createAcount("testUser2", "testPass2", 2);
         System.out.println(result);
         assertEquals("success", result.status);
 

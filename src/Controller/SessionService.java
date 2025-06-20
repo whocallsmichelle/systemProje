@@ -20,7 +20,7 @@ public class SessionService {
             return new Result("failure", "Failed to log out session", -1);
         }
     }
-    public Result yetkiKontrol(int sessionID, String  yetki) {
+    public static Result yetkiKontrol(int sessionID, String  yetki) {
         if (yetki == null || yetki.isEmpty()) {
             return new Result("failure", "Permission type cannot be null or empty", -1);
         }
@@ -37,7 +37,7 @@ public class SessionService {
         if (session == null) {
             return new Result("failure", "Session not found", -1);
         }
-        if (session.getUserType() == yetkiInt) {
+        if (session.getUserType() == yetkiInt && session.isActive()== true) {
             result = new Result("success", "User has the required permissions", sessionID);
         } else {
             result = new Result("failure", "User does not have the required permissions", -1);

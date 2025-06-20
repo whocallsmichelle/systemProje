@@ -124,9 +124,6 @@ public Book() {
         this.authorName = authorName;
     }
 
-    public void setAuthorId(int authorId) {
-        this.authorId = authorId;
-    }
 
 
     public int getAuthorId() {
@@ -136,4 +133,22 @@ public Book() {
     public void setBookId(int bookId) {
     this.bookID = bookId;
     }
+
+    @Override
+    public String toString() {
+
+        return "Book{" +
+                "bookID=" + bookID +
+                ", authorID=" + authorID +
+                ", title='" + title + '\'' +
+                ", year=" + year +
+                ", numberOfPages=" + numberOfPages +
+                ", cover='" + cover + '\'' +
+                ", about='" + about + '\'' +
+                ", releaseDate=" + releaseDate +
+                ", authorName='" + authorName + '\'' +
+                ", authorSurname='" + authorSurname + '\'' +
+                ", authorWebsite='" + authorWebsite + '\'' +
+                '}';
+}
 }
