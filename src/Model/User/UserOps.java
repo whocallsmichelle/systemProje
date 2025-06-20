@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import Controller.SessionService;
+import Model.Session.SessionOps;
 
 import Config.DBconn;
 
@@ -23,7 +25,7 @@ public  class UserOps {
     }
 
     public static boolean createUser(User user) {
-        String query = "INSERT INTO userinfo (username, password, user_type) VALUES (?, ?, ?)";
+        String query = "INSERT INTO userinfo (username, password, userType) VALUES (?, ?, ?)";
 
         try (Connection conn = DBconn.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -60,7 +62,9 @@ public  class UserOps {
                 String storedPassword = rs.getString("password");
                 String inputHashed = String.valueOf(password.hashCode());
 
-                 if (storedPassword.equals(inputHashed)) {
+
+
+                 if (storedPassword.equals(inputHashed) ) {
                     User newUser = new User(rs.getInt("userID"),
                                             rs.getString("username"),
                                             rs.getString("password"),

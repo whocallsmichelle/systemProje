@@ -6,6 +6,7 @@ import Config.DBconn;
 
 public class SessionOps {
 
+
     public static Session createSession(User user) {
         String insertQuery = "INSERT INTO sessions (userId, userType, active) VALUES (?, ?, 1)";
 
@@ -70,5 +71,22 @@ public class SessionOps {
         }
 
         return false;
+    }
+    public static boolean sessionKontrol(int userId){
+        String query = "SELECT * FROM sessions WHERE userId = ? AND active = 1";
+
+        try (Connection conn = DBconn.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+
+            return rs.next(); // If a session exists, return true
+
+        } catch (SQLException e) {
+            System.out.println("Error checking session: " + e.getMessage());
+        }
+
+        return false; // No active session found
     }
 }

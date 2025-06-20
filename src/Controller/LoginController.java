@@ -10,6 +10,11 @@ public class LoginController {
     public Result login(String username, String password) {
         User result = Model.User.UserOps.login(username, password);
         Result loginResult;
+
+        if (SessionService.isSessionActive(result).status == "failure") {
+            loginResult = new Result("failure", "User already logged in", -1);
+            return loginResult;
+        }
         if (result.getUserId() != -1) {
              loginResult = new Result("success", "Login successful for user: " + username,SessionService.createSession(result).getId());
         } else {
