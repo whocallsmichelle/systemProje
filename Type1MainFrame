@@ -1,0 +1,94 @@
+package view;
+
+import database.DatabaseManager;
+import model.Book;
+import model.User;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.util.ArrayList;
+
+public class Type1MainFrame extends JFrame {
+    private User loggedInUser;
+    private JTable bookTable; // Kitapları göstermek için tablo
+    private DefaultTableModel tableModel;
+
+    public Type1MainFrame(User user) {
+        this.loggedInUser = user;
+        setTitle("MyLibrary Yönetim Paneli" + loggedInUser.getUsername());
+        setSize(800, 600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        JTabbedPane tabbedPane = new JTabbedPane();
+
+      
+        JPanel libraryPanel = new JPanel(new BorderLayout());
+        
+        // Butonlar için panel
+        JPanel buttonPanel = new JPanel();
+        JButton favBooksButton = new JButton("Favori Kitaplarımı Göster");
+        buttonPanel.add(favBooksButton);
+        // Eklenecek butonlar buraya
+        libraryPanel.add(buttonPanel, BorderLayout.NORTH);
+
+    
+        String[] columnNames = {"ID", "Başlık", "Yayın Yılı", "Puan"};
+        tableModel = new DefaultTableModel(columnNames, 0);
+        bookTable = new JTable(tableModel);
+        libraryPanel.add(new JScrollPane(bookTable), BorderLayout.CENTER);
+        
+        tabbedPane.addTab("Kütüphanem", libraryPanel);
+
+    
+        JPanel managementPanel = new JPanel();
+        managementPanel.add(new JLabel("Kitap Ekleme/Silme/Güncelleme işlemleri burada olacak."));
+        tabbedPane.addTab("Kitap Yönetimi", managementPanel);
+        
+        add(tabbedPane);
+
+        
+        favBooksButton.addActionListener(e -> {
+            loadFavoriteBooks();
+        });
+    }
+    
+ 
+    private void loadFavoriteBooks() {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)); // Bekleme imleci
+        tableModel.setRowCount(0); // Tabloyu temizle
+
+        SwingWorker<ArrayList<Book>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected ArrayList<Book> doInBackground() throws Exception {
+                // Bu kod arka planda çalışır, GUI donmaz.
+                DatabaseManager dbManager = new DatabaseManager();
+                return dbManager.getFavoriteBooks(loggedInUser.getUserId());
+            }
+
+            @Override
+            protected void done() {
+              
+                try {
+                    ArrayList<Book> books = get(); // Sonucu al
+                    for (Book book : books) {
+                        Object[] row = {
+                            book.getBookId(),
+                            book.getTitle(),
+                            book.getYear(),
+                            book.getRating()
+                        };
+                        tableModel.addRow(row);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(Type1MainFrame.this,
+                            "Veriler yüklenirken bir hata oluştu.", "Hata", JOptionPane.ERROR_MESSAGE);
+                } finally {
+                    setCursor(Cursor.getDefaultCursor()); // İmleci normale döndür
+                }
+            }
+        };
+        worker.execute();
+    }
+}
