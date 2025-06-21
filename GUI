@@ -42,7 +42,6 @@ public class DatabaseManager {
   // favori kitap işaretleme
     public ArrayList<Book> getFavoriteBooks(int userId) {
         ArrayList<Book> bookList = new ArrayList<>();
-        // SQL sorgusunu proje gereksinimlerinize göre düzenleyebilirsiniz.
         String sql = "SELECT * FROM books WHERE userId = ? AND rating >= 4";
         
         try (Connection conn = getConnection();
