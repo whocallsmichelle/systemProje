@@ -1,91 +1,104 @@
+//Type1
 package view;
 
-import database.DatabaseManager;
+import controller.BookController;
 import model.Book;
 import model.User;
+import util.Result;
+
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.ArrayList;
 
 public class Type1MainFrame extends JFrame {
     private User loggedInUser;
-    private JTable bookTable; // Kitapları göstermek için tablo
-    private DefaultTableModel tableModel;
+    private int sessionId; // SESSION ID'Yİ TUTMAK İÇİN ALAN
+    private BookController bookController; // Controller nesnesi
 
-    public Type1MainFrame(User user) {
+    private JTextField bookIdField;
+    private JButton displayBookButton;
+    private JTextArea bookInfoArea;
+
+    public Type1MainFrame(User user, int sessionId) {
         this.loggedInUser = user;
-        setTitle("MyLibrary Yönetim Paneli" + loggedInUser.getUsername());
+        this.sessionId = sessionId; // Gelen sessionId'yi sakla
+        this.bookController = new BookController();
+
+        setTitle("MyLibrary Yönetim Paneli - Session ID: " + this.sessionId);
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         JTabbedPane tabbedPane = new JTabbedPane();
 
-      
-        JPanel libraryPanel = new JPanel(new BorderLayout());
-        
-        // Butonlar için panel
-        JPanel buttonPanel = new JPanel();
-        JButton favBooksButton = new JButton("Favori Kitaplarımı Göster");
-        buttonPanel.add(favBooksButton);
-        // Eklenecek butonlar buraya
-        libraryPanel.add(buttonPanel, BorderLayout.NORTH);
+        //Arama ve Görüntüleme
+        JPanel displayPanel = new JPanel(new BorderLayout());
 
-    
-        String[] columnNames = {"ID", "Başlık", "Yayın Yılı", "Puan"};
-        tableModel = new DefaultTableModel(columnNames, 0);
-        bookTable = new JTable(tableModel);
-        libraryPanel.add(new JScrollPane(bookTable), BorderLayout.CENTER);
+        JPanel topPanel = new JPanel();
+        topPanel.add(new JLabel("Kitap ID:"));
+        bookIdField = new JTextField(10);
+        topPanel.add(bookIdField);
+        displayBookButton = new JButton("Kitap Bilgilerini Getir");
+        topPanel.add(displayBookButton);
         
-        tabbedPane.addTab("Kütüphanem", libraryPanel);
+        displayPanel.add(topPanel, BorderLayout.NORTH);
 
-    
-        JPanel managementPanel = new JPanel();
-        managementPanel.add(new JLabel("Kitap Ekleme/Silme/Güncelleme işlemleri burada olacak."));
-        tabbedPane.addTab("Kitap Yönetimi", managementPanel);
+        bookInfoArea = new JTextArea();
+        bookInfoArea.setEditable(false);
+        displayPanel.add(new JScrollPane(bookInfoArea), BorderLayout.CENTER);
+
+        tabbedPane.addTab("Görüntüleme", displayPanel);
+
+        // Diğer Sekmeler için
         
         add(tabbedPane);
 
-        
-        favBooksButton.addActionListener(e -> {
-            loadFavoriteBooks();
+        displayBookButton.addActionListener(e -> {
+            displayBookInfo();
         });
     }
-    
- 
-    private void loadFavoriteBooks() {
-        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)); // Bekleme imleci
-        tableModel.setRowCount(0); // Tabloyu temizle
 
-        SwingWorker<ArrayList<Book>, Void> worker = new SwingWorker<>() {
+    private void displayBookInfo() {
+        String bookIdText = bookIdField.getText();
+        if (bookIdText.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Lütfen bir Kitap ID girin.", "Uyarı", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        SwingWorker<Result, Void> worker = new SwingWorker<>() {
             @Override
-            protected ArrayList<Book> doInBackground() throws Exception {
-                // Bu kod arka planda çalışır, GUI donmaz.
-                DatabaseManager dbManager = new DatabaseManager();
-                return dbManager.getFavoriteBooks(loggedInUser.getUserId());
+            protected Result doInBackground() throws Exception {
+                // Arka planda çalışacak kod
+                int bookId = Integer.parseInt(bookIdText);
+                // Controller'ı sessionID ile çağır!
+                return bookController.displayBook(sessionId, bookId);
             }
 
             @Override
             protected void done() {
-              
+                // İş bitince GUI'yi güncelle
                 try {
-                    ArrayList<Book> books = get(); // Sonucu al
-                    for (Book book : books) {
-                        Object[] row = {
-                            book.getBookId(),
-                            book.getTitle(),
-                            book.getYear(),
-                            book.getRating()
-                        };
-                        tableModel.addRow(row);
+                    Result result = get(); // Sonucu al
+                    if (result.getStatus().equals("success")) {
+                        Book book = (Book) result.getData();
+                        // Gelen Book nesnesi ile metin alanını doldur
+                        String info = "Kitap Adı: " + book.getTitle() + "\n"
+                                    + "Yayın Yılı: " + book.getYear() + "\n"
+                                    + "Hakkında: " + book.getAbout();
+                        bookInfoArea.setText(info);
+                    } else {
+                        // Backend'den gelen hata mesajını göster
+                        bookInfoArea.setText(""); // Alanı temizle
+                        JOptionPane.showMessageDialog(Type1MainFrame.this,
+                                result.getMessage(), "Hata", JOptionPane.ERROR_MESSAGE);
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(Type1MainFrame.this,
-                            "Veriler yüklenirken bir hata oluştu.", "Hata", JOptionPane.ERROR_MESSAGE);
+                            "Bir hata oluştu: " + ex.getMessage(), "İstemci Hatası", JOptionPane.ERROR_MESSAGE);
                 } finally {
-                    setCursor(Cursor.getDefaultCursor()); // İmleci normale döndür
+                    setCursor(Cursor.getDefaultCursor());
                 }
             }
         };
